@@ -1,0 +1,59 @@
+{
+  "base": {
+    "base_token": "YOUR_BASE_TOKEN",
+    "table_id": "YOUR_TABLE_ID",
+    "view_id": "YOUR_VIEW_ID"
+  },
+  "collector": {
+    "lark_cli_bin": "/absolute/path/to/lark-cli",
+    "timeout_seconds": 20,
+    "min_score": 45,
+    "max_existing_scan": 400,
+    "default_limit_per_source": 10,
+    "user_agent": "feishu-team-intel-v1/0.1"
+  },
+  "keywords": [
+    "electronic music",
+    "ambient",
+    "techno",
+    "house",
+    "dj set",
+    "live set",
+    "festival",
+    "club culture",
+    "synth",
+    "producer",
+    "rave",
+    "label"
+  ],
+  "sources": [
+    {
+      "name": "DJ Mag",
+      "platform": "Web",
+      "kind": "rss",
+      "url": "https://djmag.com/rss.xml",
+      "limit": 10
+    },
+    {
+      "name": "CDM",
+      "platform": "Web",
+      "kind": "rss",
+      "url": "https://cdm.link/feed/",
+      "limit": 10
+    },
+    {
+      "name": "EDMTunes",
+      "platform": "Web",
+      "kind": "rss",
+      "url": "https://www.edmtunes.com/feed/",
+      "limit": 10
+    },
+    {
+      "name": "We Rave You",
+      "platform": "Web",
+      "kind": "rss",
+      "url": "https://weraveyou.com/feed/",
+      "limit": 10
+    }
+  ]
+}
