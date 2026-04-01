@@ -1,113 +1,180 @@
 # Feishu Team Intel V1
 
-`v1` 的目标是先把公开网络信号稳定写进飞书多维表，不一开始就啃复杂社媒采集。
+A starter repo for turning public signals into a Feishu-native topic workflow.
 
-如果你想把这套东西发成 GitHub starter repo，先看：
+This project collects public web signals, writes them into Feishu Base through `lark-cli`, generates a weekly topic packet, and writes selected topic candidates back into the same workflow. It is designed for small content teams that already use Feishu and want a lightweight intelligence pipeline instead of a separate database and dashboard stack.
 
-- `docs/BASE_SCHEMA.md`
-- `docs/PUBLISHING.md`
+`v1` intentionally starts with stable public sources such as RSS and exported community data. The goal is to prove the workflow first, then expand to more fragile channels later.
 
-当前结构分两层：
+## What This Repo Does
+
+This repo handles four jobs:
+
+1. Collects public signals from configured sources
+2. Filters, deduplicates, and scores them
+3. Writes structured records into Feishu Base
+4. Generates weekly reports and topic candidates from those records
+
+It is not a universal crawler. It is a starter workflow for content intelligence.
+
+## Who This Is For
+
+This repo is a good fit for:
+
+- content teams using Feishu as their main collaboration tool
+- strategy or editorial teams that need a lightweight topic radar
+- solo creators who want signals, reports, and topic candidates in one place
+- teams that want to start with public sources before adding more complex collectors
+
+## Workflow
+
+The default workflow is:
+
+`public sources -> Feishu Base -> weekly packet -> editorial report -> candidate topics`
+
+Current scripts map to that flow:
 
 - `scripts/collect_intel_v1.py`
-  - 直接抓网页 RSS 源
-  - 做关键词过滤、简单评分、去重
-  - 通过 `lark-cli` 写入飞书 Base
+  - collects RSS-based signals
+  - applies keyword matching, scoring, and deduplication
+  - writes records into Feishu Base through `lark-cli`
 - `scripts/ingest_reddit_export.py`
-  - 把后续拿到的 Reddit 导出 JSON 写进同一张表
-  - 先不把 Reddit 的在线采集做成 blocker
+  - imports exported Reddit JSON into the same Base
+  - keeps Reddit as an optional input, not a hard runtime dependency
 - `scripts/generate_weekly_topic_packet.py`
-  - 从 `自动情报采集` 视图读取最近 7 天记录
-  - 生成周报 Markdown、JSON 数据包、可直接喂给 LLM 的 Prompt
+  - reads recent records from the `自动情报采集` view
+  - generates Markdown, JSON, and a prompt-ready packet
 - `scripts/publish_weekly_report_to_base.py`
-  - 把生成好的周报 Markdown 写回同一张飞书表
-  - 默认新增一条 `记录类型=周报` 的记录
+  - writes a generated weekly report back into the same Base
 - `scripts/write_topics_from_editorial_report.py`
-  - 从中文选题会周报里解析“10 个候选话题”
-  - 去重后写进同一张表，并落到 `自动情报采集` 视图
+  - extracts topic candidates from a Chinese editorial report
+  - writes them back into the `自动情报采集` view as structured records
 
-## 当前接入范围
+## Default Inputs
 
-已做成可直接跑的 `Web` 示例源：
+The example config ships with a few general-purpose web sources:
 
 - `Hacker News` `https://hnrss.org/frontpage`
 - `TechCrunch` `https://techcrunch.com/feed/`
 - `The Verge` `https://www.theverge.com/rss/index.xml`
 - `OpenAI News` `https://openai.com/news/rss.xml`
 
-这些只是示例。你应该按自己的行业或内容方向替换成对应 RSS 源和关键词。
+These are placeholders, not opinions. Replace both the keywords and the sources with feeds that match the domain you actually care about.
 
-飞书写入目标：
+## Feishu Target
+
+The repo expects one Feishu Base table as the central store.
+
+Default examples in this repo assume:
 
 - Base: `Content Calendar`
 - Table: `Table`
 - View: `自动情报采集`
 
-## 前置条件
+Schema details live in [docs/BASE_SCHEMA.md](/Users/tidepang/2026project/feishu-team/docs/BASE_SCHEMA.md).
 
-1. 本机已安装并授权 `lark-cli`
-2. `lark-cli auth status` 显示当前是 `user`
-3. 本地配置文件存在：
+Publishing guidance for making this repo reusable lives in [docs/PUBLISHING.md](/Users/tidepang/2026project/feishu-team/docs/PUBLISHING.md).
 
-```bash
-config/intel_v1.local.json
-```
+## Prerequisites
 
-如果你是第一次使用这套仓库，建议先复制示例配置：
+Before running the pipeline:
+
+1. Install and authorize `lark-cli`
+2. Make sure `lark-cli auth status` shows a valid `user` identity
+3. Prepare a local config file
+
+Create the local config from the example:
 
 ```bash
 cp config/intel_v1.example.json config/intel_v1.local.json
 ```
 
-## 快速开始
+Then update:
 
-如果你喜欢 `make` 入口：
+- `base.base_token`
+- `base.table_id`
+- `base.view_id`
+- `keywords`
+- `sources`
+
+## Quick Start
+
+Preview what would be written:
+
+```bash
+python3 scripts/collect_intel_v1.py --config config/intel_v1.local.json --dry-run
+```
+
+Write records into Feishu Base:
+
+```bash
+python3 scripts/collect_intel_v1.py --config config/intel_v1.local.json --write
+```
+
+Limit how many entries are fetched from each source:
+
+```bash
+python3 scripts/collect_intel_v1.py --config config/intel_v1.local.json --write --limit-per-source 5
+```
+
+Run the end-to-end pipeline:
+
+```bash
+bash scripts/run_intel_pipeline.sh
+```
+
+If `make` is preferred:
 
 ```bash
 make dry-run
 make pipeline
 ```
 
-先看会写入什么：
+## Weekly Packet Output
+
+Generate the weekly packet from the records already stored in Feishu Base:
 
 ```bash
-python3 scripts/collect_intel_v1.py --config config/intel_v1.local.json --dry-run
+python3 scripts/generate_weekly_topic_packet.py --config config/intel_v1.local.json
 ```
 
-确认没问题后正式写入：
+The script writes these files into `data/`:
+
+- `weekly_packet_YYYYMMDD.json`
+- `weekly_report_YYYYMMDD.md`
+- `weekly_prompt_YYYYMMDD.md`
+
+The report can then be published back into Feishu Base:
 
 ```bash
-python3 scripts/collect_intel_v1.py --config config/intel_v1.local.json --write
+python3 scripts/publish_weekly_report_to_base.py \
+  --config config/intel_v1.local.json \
+  --report-file data/weekly_report_YYYYMMDD.md \
+  --packet-file data/weekly_packet_YYYYMMDD.json
 ```
 
-限制每个源只抓 5 条：
+## Writing Topic Candidates Back Into Base
+
+If an editorial report already exists, its topic section can be written back into the same Base:
 
 ```bash
-python3 scripts/collect_intel_v1.py --config config/intel_v1.local.json --write --limit-per-source 5
+python3 scripts/write_topics_from_editorial_report.py \
+  --config config/intel_v1.local.json \
+  --report-file data/weekly_editorial_report_20260401.md
 ```
 
-一条命令跑完“采集 + 生成周报包”：
+These records are written as:
 
-```bash
-bash scripts/run_intel_pipeline.sh
-```
+- `记录类型 = 自动情报`
+- `来源平台 = 选题`
+- `来源账号/网站 = 周报选题生成`
+- `是否转选题 = 已选中`
 
-如果只想临时控制采集量：
+They are intentionally written without `来源链接`, so they do not re-enter the next weekly packet as source signals.
 
-```bash
-LIMIT_PER_SOURCE=5 bash scripts/run_intel_pipeline.sh
-```
+## Reddit Import
 
-这条命令现在还会自动把当天周报写回飞书 Base。
-
-## Reddit 接入
-
-当前环境下，Reddit 的公开端点容易直接返回 `403`，所以 `v1` 不把它做成在线强依赖。
-
-现在的做法是：
-
-1. 你先用后续选定的 Reddit 导出方式拿到 JSON
-2. 用下面的命令写进同一张飞书表
+`v1` keeps Reddit simple. Instead of depending on live scraping, it imports exported JSON:
 
 ```bash
 python3 scripts/ingest_reddit_export.py \
@@ -116,66 +183,22 @@ python3 scripts/ingest_reddit_export.py \
   --write
 ```
 
-## 生成每周选题包
-
-从飞书里的 `自动情报采集` 视图生成本周数据包：
-
-```bash
-python3 scripts/generate_weekly_topic_packet.py --config config/intel_v1.local.json
-```
-
-输出文件默认写到 `data/`：
-
-- `weekly_packet_YYYYMMDD.json`
-- `weekly_report_YYYYMMDD.md`
-- `weekly_prompt_YYYYMMDD.md`
-
-如果存在 `weekly_editorial_report_*.md` 版本，流水线会优先把它写回飞书；否则回写默认 `weekly_report_*.md`。
-
-## 把周报选题写回自动情报
-
-如果已经有一份中文选题会周报，可以直接把其中的候选话题写进 `自动情报采集` 视图：
-
-```bash
-python3 scripts/write_topics_from_editorial_report.py \
-  --config config/intel_v1.local.json \
-  --report-file data/weekly_editorial_report_20260401.md
-```
-
-这些写回记录会使用：
-
-- `记录类型` = `自动情报`
-- `来源平台` = `选题`
-- `来源账号/网站` = `周报选题生成`
-- `是否转选题` = `已选中`
-
-同时不会参与下一轮 `weekly_packet` 统计，因为它们默认不写 `来源链接`。
-
-如果只想改统计窗口：
-
-```bash
-python3 scripts/generate_weekly_topic_packet.py \
-  --config config/intel_v1.local.json \
-  --days 7 \
-  --top-n 12
-```
-
-支持的输入字段尽量宽松，只要能提供这些字段里的大部分就行：
+Expected fields are flexible, but these are the most useful:
 
 - `title`
 - `url`
 - `subreddit`
 - `author`
-- `created_utc` 或 `created_at`
+- `created_utc` or `created_at`
 - `score`
 - `num_comments`
 - `selftext`
 
-## 字段映射
+## Record Shape
 
-采集脚本会写这些字段：
+The collection scripts write these fields:
 
-- `记录类型` = `自动情报`
+- `记录类型 = 自动情报`
 - `标题`
 - `来源平台`
 - `来源链接`
@@ -184,43 +207,45 @@ python3 scripts/generate_weekly_topic_packet.py \
 - `情报关键词`
 - `情报摘要`
 - `情报评分`
-- `是否转选题` = `待判断`
+- `是否转选题 = 待判断`
 
-## 简单规则
+## Built-In Heuristics
 
-### 去重
+Deduplication:
 
-- 优先按 `来源链接`
-- 其次按标准化后的 `标题`
+- first by `来源链接`
+- then by normalized `标题`
 
-### 评分
+Web scoring:
 
-网页 RSS 使用简单规则：
+- relevance: more configured keyword hits score higher
+- freshness: newer items score higher
+- usefulness: list-style, tutorial, case, analysis, workflow, and review language scores higher
 
-- 相关性：关键词命中越多越高
-- 新鲜度：越近越高
-- 可转译度：包含榜单、趋势、教程、案例、分析、workflow、review 等词更高
+Reddit import also incorporates:
 
-Reddit 导入额外会把 `score` 和 `num_comments` 算进去。
+- `score`
+- `num_comments`
 
-## 后续建议
+## Extension Path
 
-跑顺后再补：
+After the basic loop is working, the most natural next steps are:
 
-1. Reddit 在线采集
-2. 其他社媒或社区源采集
-3. 垂直行业源采集
-4. 每周自动汇总成选题周报
+1. live Reddit collection
+2. more communities or social inputs
+3. domain-specific source packs
+4. stronger weekly summarization and downstream editorial workflows
 
-## 开源分享建议
+## Repository Positioning
 
-最适合把这个仓库定位成：
+This repository is best understood as:
 
-- 一个 starter repo
-- 一个 “Feishu Base + RSS + Weekly Topic Packet” 的最小实现
-- 一个按配置替换关键词和来源就能迁移到别的主题的内容情报工作流
+- a starter repo
+- a minimal `Feishu Base + RSS + Weekly Topic Packet` implementation
+- a configurable content-intelligence workflow that can be repurposed by changing sources and keywords
 
-而不是：
+It is not intended to be:
 
-- 你团队内部生产环境的完整镜像
-- 带真实 Base token / 数据 / 周报样本的工作仓库
+- a full internal production mirror of any one team
+- a repo containing real Base tokens or private datasets
+- a universal crawler for every platform
