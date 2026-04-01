@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import argparse
 import json
+import shutil
 import sys
 from datetime import datetime, timezone
 from typing import Dict, List
@@ -21,7 +22,7 @@ def build_existing_keys(records: List[dict]) -> Dict[str, set]:
     return {"links": links, "titles": titles}
 
 
-def score_reddit_item(item: dict) -> int:
+def score_reddit_item(item: dict, keywords: List[str]) -> int:
     score = int(item.get("score", 0) or 0)
     comments = int(item.get("num_comments", 0) or 0)
     engagement = min(35, score // 20 + comments // 10)
@@ -41,23 +42,12 @@ def score_reddit_item(item: dict) -> int:
             freshness = 4
 
     title = normalize_text(item.get("title", ""))
-    relevance_terms = [
-        "electronic",
-        "ambient",
-        "techno",
-        "house",
-        "dj",
-        "festival",
-        "producer",
-        "synth",
-        "rave",
-        "label",
-    ]
+    relevance_terms = [normalize_text(term) for term in keywords if normalize_text(term)]
     relevance = min(40, sum(8 for term in relevance_terms if term in title))
     return min(100, relevance + freshness + engagement)
 
 
-def to_feishu_record(item: dict) -> dict:
+def to_feishu_record(item: dict, keywords: List[str]) -> dict:
     created = item.get("created_utc")
     if created:
         collected = datetime.fromtimestamp(float(created), tz=timezone.utc).astimezone().strftime("%Y-%m-%d %H:%M:%S")
@@ -67,11 +57,11 @@ def to_feishu_record(item: dict) -> dict:
     summary = (item.get("selftext") or item.get("summary") or "").strip()
     summary = " ".join(summary.split())[:500]
 
-    keywords = []
+    matched_keywords = []
     title = normalize_text(item.get("title", ""))
-    for term in ["electronic music", "ambient", "techno", "house", "dj", "festival", "producer", "synth", "rave", "label"]:
+    for term in keywords:
         if term in title:
-            keywords.append(term)
+            matched_keywords.append(term)
 
     return {
         "记录类型": "自动情报",
@@ -80,9 +70,9 @@ def to_feishu_record(item: dict) -> dict:
         "来源链接": item.get("url", "").strip(),
         "来源账号/网站": f"r/{item.get('subreddit', '').strip()}",
         "采集时间": collected,
-        "情报关键词": ", ".join(keywords),
+        "情报关键词": ", ".join(matched_keywords),
         "情报摘要": summary or f"作者 u/{item.get('author', 'unknown')}，score={item.get('score', 0)}，comments={item.get('num_comments', 0)}",
-        "情报评分": score_reddit_item(item),
+        "情报评分": score_reddit_item(item, keywords),
         "是否转选题": "待判断",
     }
 
@@ -99,6 +89,7 @@ def main() -> int:
         args.dry_run = True
 
     config = load_json(args.config)
+    topic_keywords = [str(item).strip() for item in config.get("keywords", []) if str(item).strip()]
     items = load_json(args.input)
     if not isinstance(items, list):
         raise SystemExit("Reddit export must be a JSON array")
@@ -113,7 +104,7 @@ def main() -> int:
 
     prepared = []
     for item in items:
-        record = to_feishu_record(item)
+        record = to_feishu_record(item, topic_keywords)
         link_key = normalize_url(record["来源链接"])
         title_key = normalize_text(record["标题"])
         if not record["标题"] or not record["来源链接"]:

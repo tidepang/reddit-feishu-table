@@ -13,46 +13,46 @@
     "user_agent": "feishu-team-intel-v1/0.1"
   },
   "keywords": [
-    "electronic music",
-    "ambient",
-    "techno",
-    "house",
-    "dj set",
-    "live set",
-    "festival",
-    "club culture",
-    "synth",
-    "producer",
-    "rave",
-    "label"
+    "ai",
+    "agent",
+    "workflow",
+    "automation",
+    "open source",
+    "content",
+    "creator",
+    "tooling",
+    "productivity",
+    "research",
+    "case study",
+    "launch"
   ],
   "sources": [
     {
-      "name": "DJ Mag",
+      "name": "Hacker News",
       "platform": "Web",
       "kind": "rss",
-      "url": "https://djmag.com/rss.xml",
+      "url": "https://hnrss.org/frontpage",
       "limit": 10
     },
     {
-      "name": "CDM",
+      "name": "TechCrunch",
       "platform": "Web",
       "kind": "rss",
-      "url": "https://cdm.link/feed/",
+      "url": "https://techcrunch.com/feed/",
       "limit": 10
     },
     {
-      "name": "EDMTunes",
+      "name": "The Verge",
       "platform": "Web",
       "kind": "rss",
-      "url": "https://www.edmtunes.com/feed/",
+      "url": "https://www.theverge.com/rss/index.xml",
       "limit": 10
     },
     {
-      "name": "We Rave You",
+      "name": "OpenAI News",
       "platform": "Web",
       "kind": "rss",
-      "url": "https://weraveyou.com/feed/",
+      "url": "https://openai.com/news/rss.xml",
       "limit": 10
     }
   ]

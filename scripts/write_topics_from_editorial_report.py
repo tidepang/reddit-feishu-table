@@ -14,10 +14,14 @@ def parse_topics(markdown: str) -> List[Dict[str, str]]:
     in_section = False
     topics: List[Dict[str, str]] = []
     current: Dict[str, str] = {}
+    section_titles = {
+        "## 10 个候选话题",
+        "## 适合小红书的 10 个选题",
+    }
 
     for raw in lines:
         line = raw.strip()
-        if line == "## 适合小红书的 10 个选题":
+        if line in section_titles:
             in_section = True
             continue
         if in_section and line.startswith("## "):

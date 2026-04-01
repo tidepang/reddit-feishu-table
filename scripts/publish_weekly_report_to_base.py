@@ -77,7 +77,7 @@ def main() -> int:
         markdown = handle.read().strip()
 
     stamp = datetime.now().strftime("%Y-%m-%d")
-    title = args.title or f"电子音乐选题会周报 {stamp}"
+    title = args.title or f"内容情报周报 {stamp}"
     payload = build_payload(title=title, markdown=markdown, packet_path=args.packet_file)
 
     if args.dry_run:

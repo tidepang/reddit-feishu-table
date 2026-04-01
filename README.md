@@ -1,6 +1,6 @@
 # Feishu Team Intel V1
 
-`v1` 目标是先把电子音乐相关的公开情报稳定写进飞书多维表，不一开始就啃小红书和 Instagram 的复杂采集。
+`v1` 的目标是先把公开网络信号稳定写进飞书多维表，不一开始就啃复杂社媒采集。
 
 如果你想把这套东西发成 GitHub starter repo，先看：
 
@@ -23,17 +23,19 @@
   - 把生成好的周报 Markdown 写回同一张飞书表
   - 默认新增一条 `记录类型=周报` 的记录
 - `scripts/write_topics_from_editorial_report.py`
-  - 从中文选题会周报里解析“适合小红书的 10 个选题”
+  - 从中文选题会周报里解析“10 个候选话题”
   - 去重后写进同一张表，并落到 `自动情报采集` 视图
 
 ## 当前接入范围
 
-已做成可直接跑的 `Web` 源：
+已做成可直接跑的 `Web` 示例源：
 
-- `DJ Mag` `https://djmag.com/rss.xml`
-- `CDM` `https://cdm.link/feed/`
-- `EDMTunes` `https://www.edmtunes.com/feed/`
-- `We Rave You` `https://weraveyou.com/feed/`
+- `Hacker News` `https://hnrss.org/frontpage`
+- `TechCrunch` `https://techcrunch.com/feed/`
+- `The Verge` `https://www.theverge.com/rss/index.xml`
+- `OpenAI News` `https://openai.com/news/rss.xml`
+
+这些只是示例。你应该按自己的行业或内容方向替换成对应 RSS 源和关键词。
 
 飞书写入目标：
 
@@ -132,7 +134,7 @@ python3 scripts/generate_weekly_topic_packet.py --config config/intel_v1.local.j
 
 ## 把周报选题写回自动情报
 
-如果已经有一份中文选题会周报，可以直接把其中的选题写进 `自动情报采集` 视图：
+如果已经有一份中文选题会周报，可以直接把其中的候选话题写进 `自动情报采集` 视图：
 
 ```bash
 python3 scripts/write_topics_from_editorial_report.py \
@@ -197,7 +199,7 @@ python3 scripts/generate_weekly_topic_packet.py \
 
 - 相关性：关键词命中越多越高
 - 新鲜度：越近越高
-- 可转译度：包含榜单、趋势、教程、艺人、festival、release 等词更高
+- 可转译度：包含榜单、趋势、教程、案例、分析、workflow、review 等词更高
 
 Reddit 导入额外会把 `score` 和 `num_comments` 算进去。
 
@@ -206,8 +208,8 @@ Reddit 导入额外会把 `score` 和 `num_comments` 算进去。
 跑顺后再补：
 
 1. Reddit 在线采集
-2. Instagram 账号/hashtag 采集
-3. 小红书只读采集
+2. 其他社媒或社区源采集
+3. 垂直行业源采集
 4. 每周自动汇总成选题周报
 
 ## 开源分享建议
@@ -216,6 +218,7 @@ Reddit 导入额外会把 `score` 和 `num_comments` 算进去。
 
 - 一个 starter repo
 - 一个 “Feishu Base + RSS + Weekly Topic Packet” 的最小实现
+- 一个按配置替换关键词和来源就能迁移到别的主题的内容情报工作流
 
 而不是：
 

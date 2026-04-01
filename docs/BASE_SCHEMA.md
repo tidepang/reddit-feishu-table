@@ -14,9 +14,9 @@
 - `来源平台`：select
   - `Web`
   - `Reddit`
-  - `Instagram`
-  - `小红书`
-  - `X/Twitter`
+  - `Newsletter`
+  - `Forum`
+  - `Social`
   - `其他`
   - `选题`
 - `来源链接`：text，建议 style 设为 `url`
