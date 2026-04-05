@@ -75,6 +75,8 @@ Schema details live in [docs/BASE_SCHEMA.md](/Users/tidepang/2026project/feishu-
 
 Publishing guidance for making this repo reusable lives in [docs/PUBLISHING.md](/Users/tidepang/2026project/feishu-team/docs/PUBLISHING.md).
 
+OpenClaw same-machine usage is documented in [docs/OPENCLAW_INTEGRATION.md](/Users/tidepang/2026project/feishu-team/docs/OPENCLAW_INTEGRATION.md).
+
 ## Prerequisites
 
 Before running the pipeline:
@@ -121,6 +123,13 @@ Run the end-to-end pipeline:
 
 ```bash
 bash scripts/run_intel_pipeline.sh
+```
+
+OpenClaw-oriented wrapper:
+
+```bash
+bash scripts/openclaw_intel.sh status
+bash scripts/openclaw_intel.sh pipeline
 ```
 
 If `make` is preferred:
