@@ -9,6 +9,11 @@ from typing import Dict, List, Optional
 from intel_common import LarkBaseClient, load_json, normalize_text
 
 
+SCRIPT_DIR = Path(__file__).resolve().parent
+ROOT_DIR = SCRIPT_DIR.parent
+PROMPT_TEMPLATE_PATH = ROOT_DIR / "prompts" / "weekly_topic_prompt.md"
+
+
 def parse_local_datetime(value: str) -> Optional[datetime]:
     if not value or not isinstance(value, str):
         return None
@@ -238,10 +243,12 @@ def main() -> int:
     coerced = [coerce_record(record) for record in records]
     packet = build_packet(coerced, days=args.days, top_n=args.top_n)
 
-    with open("prompts/weekly_topic_prompt.md", "r", encoding="utf-8") as handle:
+    with open(PROMPT_TEMPLATE_PATH, "r", encoding="utf-8") as handle:
         prompt_template = handle.read()
 
     output_dir = Path(args.output_dir)
+    if not output_dir.is_absolute():
+        output_dir = ROOT_DIR / output_dir
     output_dir.mkdir(parents=True, exist_ok=True)
     stamp = datetime.now().strftime("%Y%m%d")
 

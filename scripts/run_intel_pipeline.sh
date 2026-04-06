@@ -7,6 +7,8 @@ LIMIT_PER_SOURCE="${LIMIT_PER_SOURCE:-}"
 WINDOW_DAYS="${WINDOW_DAYS:-7}"
 TOP_N="${TOP_N:-12}"
 
+cd "$ROOT_DIR"
+
 COLLECT_ARGS=(--config "$CONFIG_PATH" --write)
 if [[ -n "$LIMIT_PER_SOURCE" ]]; then
   COLLECT_ARGS+=(--limit-per-source "$LIMIT_PER_SOURCE")

@@ -27,6 +27,14 @@ bash scripts/openclaw_intel.sh publish
 bash scripts/openclaw_intel.sh pipeline
 ```
 
+If you want a shorter natural-language entry point, use:
+
+```bash
+bash scripts/ask_openclaw_intel.sh "跑一下今天的 pipeline，然后用 4 条 bullet 告诉我结果"
+```
+
+That wrapper still uses the same local OpenClaw skill and the same-machine `lark-cli` auth. It just hides the long `openclaw agent --local ...` command.
+
 Optional env vars:
 
 ```bash
@@ -50,6 +58,14 @@ openclaw agent --local --message "Use $feishu-team-intel to run the full local p
 
 ```bash
 openclaw agent --local --message "Use $feishu-team-intel to inspect the latest weekly packet and tell me the three strongest topic directions."
+```
+
+Chinese examples through the short wrapper:
+
+```bash
+bash scripts/ask_openclaw_intel.sh "看下当前 workflow 状态"
+bash scripts/ask_openclaw_intel.sh "跑一下今天的 pipeline，然后告诉我有没有新信号、周报有没有写回飞书"
+bash scripts/ask_openclaw_intel.sh "分析最新周报，给我 5 个更值得写的话题"
 ```
 
 ## Why This Split Works

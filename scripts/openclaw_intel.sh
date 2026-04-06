@@ -7,6 +7,24 @@ COMMAND="${1:-status}"
 WINDOW_DAYS="${WINDOW_DAYS:-7}"
 TOP_N="${TOP_N:-12}"
 LIMIT_PER_SOURCE="${LIMIT_PER_SOURCE:-}"
+LOG_DIR="${OPENCLAW_INTEL_LOG_DIR:-}"
+
+enable_file_logging() {
+  if [[ -z "$LOG_DIR" || -n "${OPENCLAW_INTEL_LOGGING_ACTIVE:-}" ]]; then
+    return
+  fi
+
+  mkdir -p "$LOG_DIR"
+  local stamp log_file latest_link
+  stamp="$(date +%Y%m%d_%H%M%S)"
+  log_file="$LOG_DIR/${COMMAND}_${stamp}.log"
+  latest_link="$LOG_DIR/latest_${COMMAND}.log"
+
+  export OPENCLAW_INTEL_LOGGING_ACTIVE=1
+  exec > >(tee -a "$log_file") 2>&1
+  ln -sfn "$log_file" "$latest_link"
+  echo "Log file: $log_file"
+}
 
 require_config() {
   if [[ ! -f "$CONFIG_PATH" ]]; then
@@ -15,6 +33,8 @@ require_config() {
     exit 1
   fi
 }
+
+enable_file_logging
 
 latest_file() {
   local pattern="$1"
